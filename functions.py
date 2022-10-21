@@ -1,5 +1,20 @@
 import bpy, pickle, json
-
+from bpy.props import (StringProperty,
+                       BoolProperty,
+                       IntProperty,
+                       FloatProperty,
+                       FloatVectorProperty,
+                       EnumProperty,
+                       PointerProperty,
+                       )
+from bpy.types import (Panel,
+                       Menu,
+                       Operator,
+                       PropertyGroup,)
+                       
+                       
+### Functions ###
+                       
 def CreateILMCBlank(g, zone, index):
     filename = zone+"_block"+str(index)+".ilmc"
     with open(g.project_dir+filename, "w") as f:
@@ -22,14 +37,13 @@ class Globals:
     #populate with zones
     
     def populate(self):
-        test_value = "EyeLoop" #get zone from sidebar panel
-        if test_value not in self.ilm_atlas:
-            v = CreateILMCBlank(self, test_value, 0)
-            self.ilm_atlas[test_value] = {0:v}
+        zone_name = bpy.data.scenes["Scene"].zone_name
+        if zone_name not in self.ilm_atlas:
+            v = CreateILMCBlank(self, zone_name, 0)
+            self.ilm_atlas[zone_name] = {0:v}
     
 g = Globals()
-g.populate()
-print(g.ilm_atlas)
+
 
 def SaveUVData():
     g.uv_layer0.foreach_get("uv", g.uv_data0)
@@ -43,13 +57,18 @@ def UVDataTransfer():
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
-### Draw ###
+### Operators ###
 
-from bpy.types import (Panel,
-                       Menu,
-                       Operator,
-                       PropertyGroup,
-                       )
+class AddZone(Operator):
+    """Add UV zone"""
+    bl_idname = "wm.add_zone"
+    bl_label = "Add zone"
+    def execute(self,context):
+        g.populate()
+        return {'FINISHED'}
+
+
+### Draw ###
 
 bl_info = {
     'name': 'Compass ILM',
@@ -76,18 +95,28 @@ class OBJECT_PT_CompassPanel(Panel):
         return context.object is not None
 
     def draw(self, context):
+        scene = context.scene
         layout = self.layout
-        row = layout.row()
         #prop, operator, label
+        
+        subrow = layout.row(align=True)
+        
+        subrow.prop(scene, "zone_name")
+        subrow.operator("wm.add_zone")
 
-classes = [OBJECT_PT_CompassPanel]
+classes = [OBJECT_PT_CompassPanel, AddZone]
+
+
+### Register / unregister ###
 
 def register():
     for c in classes: bpy.utils.register_class(c)
-
+    bpy.types.Scene.zone_name = StringProperty(name = "Zone")
 
 def unregister():
     for c in classes: bpy.utils.unregister_class(c)
+    for i in [bpy.types.Scene.zone_name]:
+        del i
 
 
 if __name__ == "__main__":
