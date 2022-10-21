@@ -42,3 +42,53 @@ def UVDataTransfer():
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.object.mode_set(mode='OBJECT')
 
+
+### Draw ###
+
+from bpy.types import (Panel,
+                       Menu,
+                       Operator,
+                       PropertyGroup,
+                       )
+
+bl_info = {
+    'name': 'Compass ILM',
+    'category': 'Animation',
+    'author': 'Joseph Hansen',
+    'version': (1, 0, 0),
+    'blender': (3, 3, 0),
+    'location': '',
+    'description': ''
+}
+
+
+class OBJECT_PT_CompassPanel(Panel):
+    bl_label = "Compass ILM"
+    bl_idname = "OBJECT_PT_compass_panel"
+    bl_space_type = "VIEW_3D"   
+    bl_region_type = "UI"
+    bl_category = "Animation"
+    bl_context = "objectmode"   
+
+
+    @classmethod
+    def poll(self,context):
+        return context.object is not None
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        #prop, operator, label
+
+classes = [OBJECT_PT_CompassPanel]
+
+def register():
+    for c in classes: bpy.utils.register_class(c)
+
+
+def unregister():
+    for c in classes: bpy.utils.unregister_class(c)
+
+
+if __name__ == "__main__":
+    register()
